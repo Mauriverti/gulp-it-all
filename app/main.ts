@@ -6,7 +6,19 @@ function showHello(element: string, name: string) {
     const e = document.getElementById(element);
     e.innerHTML = sayHello(name);
     console.log('val', e);
+    request();
   }, 2000);
 }
 
-showHello('teste', 'uhul');
+function request() {
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.open('GET', '/api/request/test');
+  xhttp.send();
+  xhttp.onreadystatechange = () => {
+    const e = document.getElementById('test');
+    e.innerHTML = sayHello(xhttp.responseText);
+  };
+}
+
+showHello('test', 'uhul');
