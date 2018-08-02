@@ -5,6 +5,7 @@ let sass =        require('gulp-sass');
 let ts =          require('gulp-typescript');
 let tsProject =   ts.createProject('tsconfig.json');
 let browserify =  require('browserify');
+var source = require('vinyl-source-stream');
 let tsify =       require('tsify');
 
 // let appName = 'app/';
@@ -13,10 +14,10 @@ let tsify =       require('tsify');
 // let prod = true;
 
 let conf = {
-  appName = 'app/',
-  appFolder = `./${appName}`,
-  buildFolder = './dist/',
-  prod = true
+  appName: 'app/',
+  appFolder: `./app/`,
+  buildFolder: './dist/',
+  prod: true
 
 }
 
@@ -27,7 +28,7 @@ gulp.task('clean', () =>
 
 gulp.task( 'sass-compile', () =>
   gulp.src(`${conf.appFolder}*.sass`)
-    .pipe(sass({outputStyle: prod ? 'compressed': ''}))
+    .pipe(sass({outputStyle: conf.prod ? 'compressed': ''}))
     .pipe(gulp.dest(`${conf.buildFolder}${conf.appName}`))
 );
 
@@ -44,13 +45,20 @@ gulp.task('ts-compile', () =>
     .pipe(gulp.dest(`${conf.buildFolder}${conf.appName}`))
 );
 
-gulp.task('deploy', () => 
+gulp.task('deploy', ['build'], () => 
   browserify({
-    // basedir: 
+    basedir: './app/',
+    entries: ['main.ts'],
+    cache: {},
+    packageCache: {}
   })
+  .plugin(tsify)
+  .bundle()
+  .pipe(source('main.js'))
+  .pipe(gulp.dest(`${conf.buildFolder}${conf.appName}`))
 );
 
-gulp.task('build', ['pug-compile', 'sass-compile', 'ts-compile']);
+gulp.task('build', ['pug-compile', 'sass-compile']);
 
 gulp.task('watch', () => {
   gulp.watch(`${conf.appFolder}**/*.sass`, ['sass-compile']);
@@ -59,4 +67,4 @@ gulp.task('watch', () => {
 });
 
 
-gulp.task( 'default', ['watch']);
+gulp.task( 'default', ['deploy']);
