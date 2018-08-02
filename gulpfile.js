@@ -9,16 +9,17 @@ let watchify =    require("watchify");              // Watch mode for browserify
 let gutil =       require('gulp-util');             // Utility functions for gulp plugins
 let buffer =      require('vinyl-buffer');          // Converts streaming vinyl files to use buffers
 let sourcemaps =  require('gulp-sourcemaps');       // Creates sourcemaps to uglyfied files
-let uglify =      require('gulp-uglify');           // minifies files
-let webserver =   require('gulp-webserver');        // webserver to test code in developer environment
+let uglify =      require('gulp-uglify');           // Minifies files
+let webserver =   require('gulp-webserver');        // Webserver to test code in developer environment
+let argv =        require('yargs').argv;            // Helps to get adicional paramethers from terminal
 
 let conf = {
-  appName: 'app/',
   appFolder: `./app/`,
-  buildFolder: './dist/',
-  serverIP: 'localhost',
-  serverPort: 8080,
-  prod: true,
+  buildFolder: './dist/app/',
+  serverIP:   argv.apiHost || 'localhost',
+  serverPort: argv.apiPort || 8080,
+  serverName: argv.apiName || 'system',
+  prod: argv.prod,
 }
 
 gulp.task('clean', () =>
@@ -28,18 +29,18 @@ gulp.task('clean', () =>
 
 gulp.task( 'sass-compile', () =>
   gulp.src(`${conf.appFolder}*.sass`)
-    .pipe(sass({outputStyle: conf.prod ? 'compressed': ''}))
-    .pipe(gulp.dest(`${conf.buildFolder}${conf.appName}`))
+  .pipe(sass({outputStyle: conf.prod ? 'compressed': ''}))
+  .pipe(gulp.dest(conf.buildFolder))
 );
 
 gulp.task('pug-compile', () =>
   gulp.src(`${conf.appFolder}*.pug`)
     .pipe(pug())
-    .pipe(gulp.dest(`${conf.buildFolder}${conf.appName}`))
+    .pipe(gulp.dest(conf.buildFolder))
 );
 
 let watchedBrowserify = watchify(browserify({
-    basedir: './app/',
+    basedir: conf.appFolder,
     entries: ['main.ts'],
     cache: {},
     packageCache: {}
@@ -57,13 +58,13 @@ function bundle () {
   .pipe(sourcemaps.init({loadMaps: true}))
     .pipe(uglify())
   .pipe(sourcemaps.write('./'))
-  .pipe(gulp.dest(`${conf.buildFolder}${conf.appName}`))
+  .pipe(gulp.dest(conf.buildFolder))
 }
 
 gulp.task('build', ['pug-compile', 'sass-compile', 'watch'], bundle);
 
 gulp.task('webserver', () => {
-  gulp.src(`${conf.buildFolder}${conf.appName}`)
+  gulp.src(conf.buildFolder)
     .pipe(webserver({
       livereload: true,
       host: '0.0.0.0',
@@ -72,7 +73,7 @@ gulp.task('webserver', () => {
       directoryListening: true,
       proxies: [{
         source: '/api',
-        target: `http://${conf.serverIP}:${conf.serverPort}/system`
+        target: `http://${conf.serverIP}:${conf.serverPort}/${conf.serverName}`
       }]
     }))
 });
