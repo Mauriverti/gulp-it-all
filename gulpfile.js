@@ -13,6 +13,7 @@ let tsify =       require('tsify');                 // Browserify plugin for com
 let uglify =      require('gulp-uglify');           // Minifies files
 let watchify =    require("watchify");              // Watch mode for browserify builds
 let webserver =   require('gulp-webserver');        // Webserver to test code in developer environment
+let zip =         require('gulp-zip');              // Generate a zip from a folder
 
 Object.assign( conf, {
   appFolder: `./app/`,
@@ -84,6 +85,12 @@ gulp.task('watch', () => {
   gulp.watch(`${conf.appFolder}**/*.sass`, ['sass-compile']);
   gulp.watch(`${conf.appFolder}**/*.pug`, ['pug-compile']);
 });
+
+gulp.task('build', () =>
+  gulp.src(`${conf.buildFolder}*`)
+    .pipe(zip(`${conf.name}#${conf.version}.zip`))
+    .pipe(gulp.dest('./'))
+);
 
 
 gulp.task( 'default', ['compile']);
